@@ -35,14 +35,15 @@ public class EmployeesUpdateServlet extends HttpServlet {
     /**
      * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
      */
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String _token = (String)request.getParameter("_token");
-        if(_token != null && _token.equals(request.getSession().getId())) {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String _token = (String) request.getParameter("_token");
+        if (_token != null && _token.equals(request.getSession().getId())) {
             EntityManager em = DBUtil.createEntityManager();
-            Employee e = em.find(Employee.class, (Integer)(request.getSession().getAttribute("employee_id")));
+            Employee e = em.find(Employee.class, (Integer) (request.getSession().getAttribute("employee_id")));
 
             Boolean code_duplicate_check = true;
-            if(e.getCode().equals(request.getParameter("code"))) {
+            if (e.getCode().equals(request.getParameter("code"))) {
                 code_duplicate_check = false;
             } else {
                 e.setCode(request.getParameter("code"));
@@ -50,15 +51,13 @@ public class EmployeesUpdateServlet extends HttpServlet {
 
             Boolean password_check_flag = true;
             String password = request.getParameter("password");
-            if(password == null || password.equals("")) {
+            if (password == null || password.equals("")) {
                 password_check_flag = false;
             } else {
                 e.setPassword(
                         EncryptUtil.getPasswordEncrypt(
                                 password,
-                                (String)this.getServletContext().getAttribute("pepper")
-                                )
-                        );
+                                (String)this.getServletContext().getAttribute("pepper")));
             }
 
             e.setName(request.getParameter("name"));
@@ -67,7 +66,7 @@ public class EmployeesUpdateServlet extends HttpServlet {
             e.setDelete_flag(0);
 
             List<String> errors = EmployeeValidator.validate(e, code_duplicate_check, password_check_flag);
-            if(errors.size() > 0) {
+            if (errors.size() > 0) {
                 em.close();
 
                 request.setAttribute("_token", request.getSession().getId());
@@ -81,6 +80,9 @@ public class EmployeesUpdateServlet extends HttpServlet {
                 em.getTransaction().commit();
                 em.close();
                 request.getSession().setAttribute("flush", "更新が完了しました。");
+
+                request.getSession().removeAttribute("employee_id");
+                response.sendRedirect(request.getContextPath() + "/employees/index");
             }
         }
     }
